@@ -97,4 +97,117 @@ router.post("/recover-password-code", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/validate-recover-password-code", async (req: Request, res: Response) => {
+  try {
+    const data = req.body;
+
+    const schema = yup.object().shape({
+      recoverPasswordCode: yup.string().required("A chave 'recoverPasswordCode' é obrigatória!"),
+      email: yup.string().email("E-mail inválido").required("O campo E-mail é obrigatório"),
+    });
+
+    await schema.validate(data, { abortEarly: false });
+
+    const userRepository = AppDataSource.getRepository(User);
+
+    const user = await userRepository.findOneBy({ email: data.email });
+
+    if (!user) {
+      res.status(404).json({
+        message: "Chave recuperar senha inválida!",
+      });
+
+      return;
+    }
+
+    // Verificar se a chave informada corresponde à chave armazenada no banco
+    const isPasswordValidCode = await user.compareRecoverPasswordCode(data.recoverPasswordCode);
+
+    if (!isPasswordValidCode) {
+      res.status(400).json({
+        message: "Código recuperar senha inválido!",
+      });
+
+      return;
+    }
+
+    res.status(200).json({
+      message: "Chave recuperar senha válido",
+    });
+
+    return;
+  } catch (error) {
+    if (error instanceof yup.ValidationError) {
+      res.status(400).json({
+        message: error.errors,
+      });
+
+      return;
+    }
+
+    res.status(500).json({
+      message: "Chave recuperar senha inválida ou expirada!",
+    });
+  }
+});
+
+router.put("/update-password-with-code", async (req: Request, res: Response) => {
+  try {
+    const data = req.body;
+
+    const schema = yup.object().shape({
+      recoverPasswordCode: yup.string().required("A chave 'recoverPasswordCode' é obrigatória!"),
+      email: yup.string().email("E-mail inválido").required("O campo E-mail é obrigatório"),
+      password: yup.string().required("O campo senha é obrigatório").min(6, "O campo senha deve ter no minimo 6 caracteres"),
+    });
+
+    await schema.validate(data, { abortEarly: false });
+
+    const userRepository = AppDataSource.getRepository(User);
+
+    const user = await userRepository.findOneBy({ email: data.email });
+
+    if (!user) {
+      res.status(404).json({
+        message: "Email não encontrado!",
+      });
+
+      return;
+    }
+
+    // Verificar se a chave informada corresponde à chave armazenada no banco
+    const isPasswordValidCode = await user.compareRecoverPasswordCode(data.recoverPasswordCode);
+
+    if (!isPasswordValidCode) {
+      res.status(400).json({
+        message: "Código recuperar senha inválido!",
+      });
+
+      return;
+    }
+
+    data.recoverPasswordCode = null;
+    userRepository.merge(user, data);
+    await userRepository.save(user);
+
+    res.status(200).json({
+      message: "Senha alterada com sucesso!",
+    });
+
+    return;
+  } catch (error) {
+    if (error instanceof yup.ValidationError) {
+      res.status(400).json({
+        message: error.errors,
+      });
+
+      return;
+    }
+
+    res.status(500).json({
+      message: "Erro ao editar senha!",
+    });
+  }
+});
+
 export default router;
