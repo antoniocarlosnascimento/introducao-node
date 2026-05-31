@@ -28,6 +28,26 @@ router.get("/products", verifyToken, async (req: Request, res: Response) => {
   }
 });
 
+router.get("/products/latest", verifyToken, async (req: Request, res: Response) => {
+  try {
+    const productRepository = AppDataSource.getRepository(Product);
+
+    const lastestProducts = await productRepository.find({
+      take: 4,
+      order: { id: "DESC" },
+      relations: ["situation", "category"],
+    });
+
+    res.status(200).json(lastestProducts);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Erro ao listar produtos",
+      error,
+    });
+  }
+});
+
 router.get("/products/:id", verifyToken, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

@@ -29,6 +29,28 @@ router.get("/product-categories", verifyToken, async (req: Request, res: Respons
   }
 });
 
+router.get("/product-categories/latest", verifyToken, async (req: Request, res: Response) => {
+  try {
+    const productsCategoryRepository = AppDataSource.getRepository(ProductCategory);
+
+    const productCategoriesLates = await productsCategoryRepository.find({
+      take: 4,
+      order: { id: "DESC" },
+    });
+
+    res.status(200).json(productCategoriesLates);
+
+    return;
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Erro ao listar categorias de produto",
+    });
+
+    return;
+  }
+});
+
 router.get("/product-categories/:id", verifyToken, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
