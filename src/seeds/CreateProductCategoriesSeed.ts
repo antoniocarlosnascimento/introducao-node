@@ -18,6 +18,24 @@ export default class CreateProductCategoriesSeed {
       {
         name: "Loja",
       },
+      {
+        name: "Terreno",
+      },
+      {
+        name: "Área de Lazer",
+      },
+      {
+        name: "Chacáras",
+      },
+      {
+        name: "Comercial",
+      },
+      {
+        name: "Barracão - Galpão",
+      },
+      {
+        name: "Kitnet",
+      },
     ];
 
     await productCategoryRepository.save(productsCategories);

@@ -48,6 +48,55 @@ router.get("/products/latest", verifyToken, async (req: Request, res: Response) 
   }
 });
 
+router.get("/products-category/:category", verifyToken, async (req: Request, res: Response) => {
+  try {
+    const { category } = req.params;
+
+    const productRepository = AppDataSource.getRepository(Product);
+
+    const result = await productRepository.find({
+      where: {
+        category: { id: Number(category) },
+        situation: { id: 1 },
+      },
+      order: { id: "DESC" },
+      relations: ["situation", "category"],
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Erro ao listar produtos",
+      error,
+    });
+  }
+});
+
+router.get("/products-situation/:situation", verifyToken, async (req: Request, res: Response) => {
+  try {
+    const { situation } = req.params;
+
+    const productRepository = AppDataSource.getRepository(Product);
+
+    const result = await productRepository.find({
+      where: {
+        situation: { id: Number(situation) },
+      },
+      order: { id: "DESC" },
+      relations: ["situation", "category"],
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "Erro ao listar produtos",
+      error,
+    });
+  }
+});
+
 router.get("/products/:id", verifyToken, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
